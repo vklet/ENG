@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import re
 
 from dataclasses import field, dataclass
 from material import Material
@@ -31,7 +32,7 @@ class Ply():
         return self._S
 
 class Laminat():
-    def __init__(self, stacking_sequence:list, mat:Material, ply_thickness: float) -> None:
+    def __init__(self, stacking_sequence:list[int], mat:Material, ply_thickness: float) -> None:
         self.stacking = stacking_sequence
         self.thickness = len(self.stacking)*ply_thickness
         self._ply_angles = {a: Ply(mat, ply_thickness, a) for a in set(self.stacking)} # current limatation to laminates composed of one material and plies of same thickness
@@ -47,8 +48,16 @@ class Laminat():
         pass
 
     @classmethod
-    def from_string(cls, stacking_sequence:str, mat:Material, ply_thickness: float) -> Laminat:
-        pass
+    def from_string(cls, stacking_sequence:str,*, material:Material, ply_thickness: float, delimeter:str='/') -> Laminat:
+
+        clean_stacking_sequence = re.sub(rf'[^\d{delimeter}]', '', stacking_sequence).strip(delimeter)
+
+        if delimeter not in clean_stacking_sequence:
+            raise ValueError(f'Provided stacking seuence ({stacking_sequence}) is not valid.')
+
+        stackng = list(map(int, clean_stacking_sequence.split(delimeter)))
+
+        return cls(stackng, material, ply_thickness=ply_thickness)
 
 if __name__ == "__main__":
     mat = Material('Test', 125_000, 8_800, 5_300, 0.29)
@@ -59,9 +68,16 @@ if __name__ == "__main__":
     print(ply.compliance_matrix)
 
     stacking = [0, 45, 90,-45, 0, 0, -45, 90, 45, 0]
+
     lam = Laminat(stacking, mat, 0.25)
     print(lam.thickness)
     for a, p in lam._ply_angles.items():
         print(a)
         print(p.stiffness_matrix)
+
+    test_sequence = '0/ 45 / 90/135 /0/135/90/45/0'
+
+    lam2 = Laminat.from_string(test_sequence, material = mat, ply_thickness=0.1)
+
+    print(f'{lam2.stacking=}')
 
