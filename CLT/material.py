@@ -13,8 +13,8 @@ class Material():
     nu21: float = field(init=False)
 
     # Stiffness and Compliance formulation
-    Q: np.ndarray = field(init=False)
-    S: np.ndarray = field(init=False)
+    _Q: np.ndarray = field(init=False)
+    _S: np.ndarray = field(init=False)
 
 
     def __post_init__(self) -> None:
@@ -32,22 +32,22 @@ class Material():
 
         rows = [0, 0, 1, 1, 2]
         cols = [0, 1, 0, 1, 2]
-        self.Q = np.zeros((3, 3))
-        self.S = np.zeros((3, 3))
-        self.Q[rows, cols] = np.array([Q11, Q12, Q12, Q22, Q33])
-        self.S[rows, cols] = np.array([S11, S12, S12, S22, S33])
+        self._Q = np.zeros((3, 3))
+        self._S = np.zeros((3, 3))
+        self._Q[rows, cols] = np.array([Q11, Q12, Q12, Q22, Q33])
+        self._S[rows, cols] = np.array([S11, S12, S12, S22, S33])
 
     @property
-    def stiffness_matrix(self) -> np.ndarray:
-        return self.Q.round(3)
+    def Q(self) -> np.ndarray: # stiffness matrix
+        return self._Q.round(3)
 
     @property
-    def compliance_matrix(self) -> np.ndarray:
-        return self.S
+    def S(self) -> np.ndarray: # compliance matrix
+        return self._S
 
 
 if __name__ == "__main__":
     mat = Material('Test', 125_000, 8_800, 5_300, 0.29)
-    print(mat.stiffness_matrix)
-    print(mat.compliance_matrix)
+    print(mat.Q)
+    print(mat.S)
 
